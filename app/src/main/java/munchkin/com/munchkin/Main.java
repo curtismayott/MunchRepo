@@ -3,6 +3,7 @@ package munchkin.com.munchkin;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.opengl.GLSurfaceView;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -203,6 +204,7 @@ public class Main extends ActionBarActivity
         private static final String ARG_SECTION_NUMBER = "section_number";
         private static final String ARG_PLAYER_NUMBER = "player_number";
         LinearLayout cardContainer;
+        GLSurfaceView surfaceView;
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -223,6 +225,7 @@ public class Main extends ActionBarActivity
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = null;// = inflater.inflate(R.layout.fragment_main, container, false);
+
             Bundle b = getArguments();
             int sectionNumber = b.getInt(ARG_SECTION_NUMBER);
             final int playerNumber = b.getInt(ARG_PLAYER_NUMBER);
