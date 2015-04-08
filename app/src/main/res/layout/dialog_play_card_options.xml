@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Options">
+    </TextView>
+    <Button
+        android:id="@+id/equip_card"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Equip">
+    </Button>
+    <Button
+        android:id="@+id/unequip_card"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="UnEquip">
+    </Button>
+    <Button
+        android:id="@+id/play_card"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Play">
+    </Button>
+    <Button
+        android:id="@+id/discard_card"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Discard">
+    </Button>
+    <Button
+        android:id="@+id/sell_card"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Sell Card">
+    </Button>
+    <Button
+        android:id="@+id/dismiss_dialog"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Dismiss">
+    </Button>
+</LinearLayout>
