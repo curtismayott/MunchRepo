@@ -122,6 +122,9 @@ public class Player{
             gear.add(card);
         }
     }
+	/*
+	TODO: Issue with equipping only one hand or more than 2 hands
+	*/
     public boolean verifyGear(Card card){
         if(card.getCardType() == CARD_TYPE.GEAR){
             if(getGear().size() != 0) {

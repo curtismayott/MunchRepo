@@ -3,6 +3,7 @@ package munchkin.com.munchkin;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.os.Looper;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -56,6 +57,8 @@ public class Main extends ActionBarActivity
     public static Game game;
     public static int turnCount = 1;
     public static PHASES phase = PHASES.TURN_START;
+	public static final String GAME_STARTED = "GAME_STARTED";
+	public static final String PREFFS_NAME = "Munchkin";
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
@@ -226,8 +229,8 @@ public class Main extends ActionBarActivity
             Bundle b = getArguments();
             int sectionNumber = b.getInt(ARG_SECTION_NUMBER);
             final int playerNumber = b.getInt(ARG_PLAYER_NUMBER);
-            SharedPreferences preffs = getActivity().getSharedPreferences("Munchkin", MODE_PRIVATE);
-            boolean gameStarted = preffs.getBoolean("GAME_STARTED", false);
+            SharedPreferences preffs = getActivity().getSharedPreferences(PREFFS_NAME, MODE_PRIVATE);
+            boolean gameStarted = preffs.getBoolean(GAME_STARTED, false);
             if(gameStarted) {
                 switch (sectionNumber) {
                     case 1:     // table view
@@ -448,7 +451,7 @@ public class Main extends ActionBarActivity
                         LinearLayout creatureView = (LinearLayout)rootView.findViewById(R.id.creature_container);
                         if(!game.getPlayer(playerNumber).isComputer()) {
                             for(int i = 1; i < game.getNumberPlayers(); i++){
-                                if(i != playerNumber) {
+								if(i != playerNumber) {
                                     FrameLayout layout = getPlayerCard(i);
                                     layout.setLayoutParams(new LinearLayout.LayoutParams(500, 400));
                                     playerView.addView(layout);
@@ -565,7 +568,13 @@ public class Main extends ActionBarActivity
                                 resultsDialog.show();
                             }
                         });
+						/*
+						TODO: run away button - dice roll
+						*/
                         Button runButton = (Button)rootView.findViewById(R.id.combat_run);
+						/*
+						TODO: ask for help button - number treasures (optional), item (optional), person requested (optional)
+						*/
                         Button helpButton = (Button)rootView.findViewById(R.id.combat_help);
                         break;
                     case 101:       // computer combat view
@@ -607,9 +616,13 @@ public class Main extends ActionBarActivity
                             game.addPlayer(new Player(p4Name.getText().toString(), p4Gender, true), 4);
                         }
                         Log.e("Main.java", "NumberPlayers: " + game.getNumberPlayers());
+						ArrayList<Thread> playerThreads = new ArrayList<Thread>();
                         for(int i = 1; i <= game.getNumberPlayers(); i++){
                             game.drawDoor(i, 4);
                             game.drawTreasure(i, 4);
+							/*
+							TODO: should cycle through players and allow equipping gear right here
+							*/
                             if(game.getPlayer(i).isComputer()) {
                                 Thread gearControlProcess = new Thread(new CPProcess(
                                         getActivity(), i, ProcessPhase.EQUIP_GEAR, 1
@@ -622,10 +635,21 @@ public class Main extends ActionBarActivity
                                         Log.e("Main Equip", "Sleep Error: " + e.getMessage());
                                     }
                                 }
-                            }
+                            }else{
+								playerThreads.add(new Thread(new PlayerInitThread(i)));
+								playerThreads.get(i-1).run();
+								try {
+									while(playerThreads.get(i-1).isAlive()) {
+										Thread.sleep(1000);
+									}
+									playerThreads.get(i-1).join();
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
                         }
-                        SharedPreferences.Editor editor = v.getContext().getSharedPreferences("Munchkin", MODE_PRIVATE).edit();
-                        editor.putBoolean("GAME_STARTED", true);
+                        SharedPreferences.Editor editor = v.getContext().getSharedPreferences(PREFFS_NAME, MODE_PRIVATE).edit();
+                        editor.putBoolean(GAME_STARTED, true);
                         editor.commit();
                         phase = PHASES.TURN_START;
                         loadDisplay(2, 1);
@@ -638,6 +662,32 @@ public class Main extends ActionBarActivity
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.container, PlaceholderFragment.newInstance(whichScreen, playerNumber)).commit();
         }
+		class PlayerInitThread implements Runnable{
+			int pNum;
+			public PlayerInitThread(int playerNumber){
+				this.pNum = playerNumber;
+			}
+			@Override
+			public void run() {
+				final Dialog initialEquipDialog = new Dialog(getActivity());
+				initialEquipDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+				initialEquipDialog.setContentView(R.layout.dialog_init_gear);
+				TextView playerName = (TextView)initialEquipDialog.findViewById(R.id.player_name);
+				playerName.setText(game.getPlayer(pNum).getPlayerName());
+				LinearLayout cardContainer = (LinearLayout)initialEquipDialog.findViewById(R.id.card_container);
+				for(Card c : game.getPlayer(pNum).getInventory()){
+					cardContainer.addView(getCardLayout(pNum, c));
+				}
+				Button doneButton = (Button)initialEquipDialog.findViewById(R.id.done_button);
+				doneButton.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						initialEquipDialog.dismiss();
+					}
+				});
+				initialEquipDialog.show();
+			}
+		}
         private ImageButton getCardLayout(final int playerNumber, final Card card){
             final ImageButton cardContainer = new ImageButton(getActivity());
             cardContainer.setLayoutParams(new LinearLayout.LayoutParams(180, 240));
@@ -645,10 +695,11 @@ public class Main extends ActionBarActivity
             cardContainer.setScaleType(ImageView.ScaleType.FIT_XY);
             Log.e("Main.java cardLayout", card.getCardName());
             cardContainer.setImageResource(card.getCardImage());
+			cardContainer.setId(card.getCardName().hashCode());
             cardContainer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    final Dialog playCardDialog = new Dialog(getActivity());
+                    final Dialog playCardDialog = new Dialog(v.getContext());
                     playCardDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
                     playCardDialog.setContentView(R.layout.dialog_play_card_options);
                     Button equipCard = (Button) playCardDialog.findViewById(R.id.equip_card);
@@ -660,7 +711,16 @@ public class Main extends ActionBarActivity
                                     || card.getCardType() == CARD_TYPE.RACE) {
                                 (game.getPlayer(playerNumber)).equipGear(card);
                                 playCardDialog.dismiss();
-                                loadDisplay(2, playerNumber);
+								SharedPreferences prefs = v.getContext().getSharedPreferences(PREFFS_NAME, MODE_PRIVATE);
+								if(!prefs.getBoolean(GAME_STARTED, false)) {
+									loadDisplay(2, playerNumber);
+								}else{
+									if(game.getPlayer(playerNumber).checkForGear(card)){
+										cardContainer.setVisibility(View.GONE);
+									}else{
+										Toast.makeText(v.getContext(), "Cannot Equip Card", Toast.LENGTH_SHORT).show();
+									}
+								}
                             } else {
                                 Toast.makeText(getActivity(), "Cannot Equip Card", Toast.LENGTH_SHORT).show();
                                 playCardDialog.dismiss();
@@ -739,10 +799,12 @@ public class Main extends ActionBarActivity
             layout.setScaleType(ImageView.ScaleType.FIT_XY);
             return layout;
         }
+
         public FrameLayout getPlayerCard(final int playerNum){
             /*
             name   lvl   bonus
             class   race  gender
+            TODO: player card too large - make smaller
             */
             LayoutInflater inflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View view = inflater.inflate(R.layout.player_view, null);
