@@ -18,16 +18,17 @@ public class AnalyzeEquipment {
     }
     // returns arrraylist of armor should equip
     public void compareCards(){
-        if(Main.game.getPlayer(playerNumber).getInventory().size() == 0) return;
-        ArrayList<Card> cards = new ArrayList<Card>();
-        cards.addAll(Main.game.getPlayer(playerNumber).getInventory());
-        for(Card card : cards){
+        if(Main.game.getPlayer(playerNumber).getInventory().size() == 0){
+			return;
+		}
+		ArrayList<Card> cards = Main.game.getPlayer(playerNumber).getInventory();
+        for(int i = 0; i < cards.size(); i++){
             // if gear is in inventory and slot is not equipped, equip gear
-            if(card.getCardType() == CARD_TYPE.GEAR){
-                compareGear((Gear) card);
-            }else if(card.getCardType() == CARD_TYPE.RACE){
+            if(cards.get(i).getCardType() == CARD_TYPE.GEAR){
+                compareGear((Gear) cards.get(i));
+            }else if(cards.get(i).getCardType() == CARD_TYPE.RACE){
                 // search gear for gear that would be good for race
-            }else if(card.getCardType() == CARD_TYPE.CLASS){
+            }else if(cards.get(i).getCardType() == CARD_TYPE.CLASS){
                 // search gear for gear that would be good for class
             }
         }
@@ -36,7 +37,7 @@ public class AnalyzeEquipment {
     // compare equipped gear's values to gear in inventory's values
     // return suggested inventory
     private void compareGear(Gear newGear){
-        if(Main.game.getPlayer(playerNumber).getGear() == null){
+        if((Main.game.getPlayer(playerNumber).getGear()).size() == 0){
             Main.game.getPlayer(playerNumber).forceEquipGear(newGear);
         }
         for(Card curGear : Main.game.getPlayer(playerNumber).getGear()){
@@ -44,15 +45,27 @@ public class AnalyzeEquipment {
                 if(newGear.getGearPosition() != GearPositions.HAND) {
                     if (((Gear) curGear).getBonusAmount() < newGear.getBonusAmount()) {
                         Main.game.getPlayer(playerNumber).forceEquipGear(newGear);
+						Main.game.getPlayer(playerNumber).unequipGear(curGear);
                     }else return;
                 }else{
                     if(Main.game.getPlayer(playerNumber).getNumHands() == 1 && newGear.getNumHands() == 1){
                         Main.game.getPlayer(playerNumber).forceEquipGear(newGear);
-                    }else if(Main.game.getPlayer(playerNumber).getNumHands() == 2 && newGear.getNumHands() == 1 && ((Gear)curGear).getNumHands() == 1){
+                    }else if(Main.game.getPlayer(playerNumber).getNumHands() == 2){
                         if(((Gear)curGear).getBonusAmount() < newGear.getBonusAmount()){
                             Main.game.getPlayer(playerNumber).forceEquipGear(newGear);
+							Main.game.getPlayer(playerNumber).unequipGear(curGear);
                         }else return;
-                    }
+                    }else if(Main.game.getPlayer(playerNumber).getNumHands() == 1){
+						if(newGear.getNumHands() == 1){
+							Main.game.getPlayer(playerNumber).forceEquipGear(newGear);
+							Main.game.getPlayer(playerNumber).unequipGear(curGear);
+						}else if(newGear.getNumHands() == 2){
+							if(((Gear) curGear).getBonusAmount() < newGear.getBonusAmount()){
+								Main.game.getPlayer(playerNumber).forceEquipGear(newGear);
+								Main.game.getPlayer(playerNumber).unequipGear(curGear);
+							}
+						}
+					}
                 }
                 return;
             }

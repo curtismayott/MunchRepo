@@ -26,7 +26,8 @@ public class CPProcess implements Runnable {
 
                 break;
             case FINISH_TURN:
-
+				turnEquipGear();
+				applyCharity();
                 break;
         }
     }
@@ -34,4 +35,8 @@ public class CPProcess implements Runnable {
         AnalyzeEquipment analysis = new AnalyzeEquipment(playerNumber);
         analysis.compareCards();
     }
+	public void applyCharity(){
+		Charity charity = new Charity(playerNumber);
+		charity.executeCharity();
+	}
 }

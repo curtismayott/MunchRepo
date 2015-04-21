@@ -11,6 +11,7 @@ public class Player{
     int handCapacity;
     ArrayList<Card> gear;
     ArrayList<Card> inventory;
+	ArrayList<Card> backpack;
     // pName, gender, isComputer
     //new Player(p4Name.getText().toString(), p4Gender, true)
     public Player(String name, Gender gender, boolean isComputer){
@@ -21,6 +22,7 @@ public class Player{
         this.isComputer = isComputer;
         gear = new ArrayList<Card>();
         inventory = new ArrayList<Card>();
+		backpack = new ArrayList<Card>();
     }
     public String getPlayerName(){ return name; }
     public int getLevel(){ return level; }
@@ -162,7 +164,38 @@ public class Player{
         }
         return result;
     }
+	public int getRunawayValue(){
+		int runAway = 3;
+		/*
+		TODO: add runaway gear search
+		*/
+		return runAway;
+	}
     public ArrayList<Card> getEffects(){
         return null;
     }
+
+
+	public ArrayList<Card> getBackpack(){
+		return backpack;
+	}
+	public void addToBackpack(Card card){
+		if(card.getCardType() == CARD_TYPE.GEAR){
+			backpack.add(card);
+			if(checkForInventory(card)) {
+				inventory.remove(card);
+			}else{
+				gear.remove(card);
+			}
+		}
+	}
+	public void backBackToEquipped(Card card){
+		if(verifyGear(card)){
+			backpack.remove(card);
+			gear.add(card);
+		}
+	}
+	public boolean checkForBackpack(Card card){
+		return backpack.contains(card);
+	}
 }

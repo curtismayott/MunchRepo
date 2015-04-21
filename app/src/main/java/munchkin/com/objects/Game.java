@@ -98,13 +98,23 @@ public class Game {
             return false;
         }
     }
+	public boolean isLowestLevelPlayer(int playerNumber){
+		return playerNumber == getLowestLevelPlayer();
+	}
+	public int getLowestLevelPlayer(){
+		int playerNumber = 1;
+		for(int i : players.keySet()){
+			if(getPlayer(i).getLevel() > getPlayer(playerNumber).getLevel()){
+				playerNumber = i;
+			}
+		}
+		return playerNumber;
+	}
 
-
-
-
-
-
-
-
-
+	public void tradeCard(int from, int to, ArrayList<Card> cards){
+		for(Card c : cards){
+			getPlayer(from).removeInventory(c);
+		}
+		getPlayer(to).addInventory(cards);
+	}
 }

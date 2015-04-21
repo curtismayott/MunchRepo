@@ -3,7 +3,10 @@ package munchkin.com.munchkin;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.media.Image;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -32,6 +35,9 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import munchkin.com.objects.BAD_STUFF;
 import munchkin.com.objects.CARD_TYPE;
@@ -232,6 +238,9 @@ public class Main extends ActionBarActivity
             SharedPreferences preffs = getActivity().getSharedPreferences(PREFFS_NAME, MODE_PRIVATE);
             boolean gameStarted = preffs.getBoolean(GAME_STARTED, false);
             if(gameStarted) {
+				if(game.getPlayer(playerNumber).isComputer() && phase != PHASES.LOOK_FOR_TROUBLE && phase != PHASES.KICK_OPEN_THE_DOOR && phase == PHASES.IN_COMBAT){
+					sectionNumber = 1;
+				}
                 switch (sectionNumber) {
                     case 1:     // table view
                         rootView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -354,49 +363,116 @@ public class Main extends ActionBarActivity
                         }
 
 
-                        if(game.getPlayer(playerNumber).isComputer() && phase == PHASES.KICK_OPEN_THE_DOOR){
-                            Thread gearControlProcess = new Thread(new CPProcess(
-                                    getActivity(), playerNumber, ProcessPhase.EQUIP_GEAR, 1
-                            ));
-                            gearControlProcess.run();
-                            while(gearControlProcess.isAlive()){
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                        if(game.getPlayer(playerNumber).isComputer()){
+							if(phase == PHASES.KICK_OPEN_THE_DOOR){
+								Thread gearControlProcess = new Thread(new CPProcess(
+										getActivity(), playerNumber, ProcessPhase.EQUIP_GEAR, 1
+								));
+								gearControlProcess.run();
+								while (gearControlProcess.isAlive()) {
+									try {
+										Thread.sleep(1000);
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									}
+								}
 
-                            final Dialog displayDialog = new Dialog(getActivity());
-                            displayDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-                            displayDialog.setContentView(R.layout.dialog_select_creature);
-                            TextView label = (TextView)displayDialog.findViewById(R.id.select_label);
-                            label.setText(game.getPlayer(playerNumber).getPlayerName() + "'s Door");
-                            final Button submit = (Button) displayDialog.findViewById(R.id.select_submit);
-                            game.kickOpenTheDoor(playerNumber);
-                            submit.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    if(game.getActiveCreatures() != null && game.getActiveCreatures().size() > 0){
-                                        displayDialog.dismiss();
-                                        loadDisplay(100, playerNumber);
-                                    }else{
-                                        displayDialog.dismiss();
-                                        loadDisplay(1, playerNumber);
-                                    }
-                                }
-                            });
-                            LinearLayout newCardView = (LinearLayout) displayDialog.findViewById(R.id.creature_container);
-                            if(game.getActiveCreatures() != null && game.getActiveCreatures().size() > 0) {
-                                for (Card inventory : game.getActiveCreatures()) {
-                                    ImageButton image = new ImageButton(getActivity());
-                                    image.setScaleType(ImageView.ScaleType.FIT_XY);
-                                    image.setImageResource(inventory.getCardImage());
-                                    image.setLayoutParams(new LinearLayout.LayoutParams(400, 520));
-                                    newCardView.addView(image);
-                                }
-                            }
-                            displayDialog.show();
+								final Dialog displayDialog = new Dialog(getActivity());
+								displayDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+								displayDialog.setContentView(R.layout.dialog_select_creature);
+								TextView label = (TextView) displayDialog.findViewById(R.id.select_label);
+								label.setText(game.getPlayer(playerNumber).getPlayerName() + "'s Door");
+								final Button submit = (Button) displayDialog.findViewById(R.id.select_submit);
+								game.kickOpenTheDoor(playerNumber);
+								submit.setOnClickListener(new View.OnClickListener() {
+									@Override
+									public void onClick(View v) {
+										if (game.getActiveCreatures() != null && game.getActiveCreatures().size() > 0) {
+											displayDialog.dismiss();
+											loadDisplay(100, playerNumber);
+										} else {
+											displayDialog.dismiss();
+											loadDisplay(1, playerNumber);
+										}
+									}
+								});
+								LinearLayout newCardView = (LinearLayout) displayDialog.findViewById(R.id.creature_container);
+								if (game.getActiveCreatures() != null && game.getActiveCreatures().size() > 0) {
+									for (Card inventory : game.getActiveCreatures()) {
+										ImageButton image = new ImageButton(getActivity());
+										image.setScaleType(ImageView.ScaleType.FIT_XY);
+										image.setImageResource(inventory.getCardImage());
+										image.setLayoutParams(new LinearLayout.LayoutParams(400, 520));
+										newCardView.addView(image);
+									}
+								}
+								displayDialog.show();
+							}else if(phase == PHASES.LOOK_FOR_TROUBLE){
+								final ArrayList<Card> playerCreatures = game.getPlayer(playerNumber).getCreatures();
+								int cIndex = -1;
+								int tLevel = 1000;
+								for(int i = 0; i < playerCreatures.size(); i++){
+									if(((Creature)(playerCreatures.get(i))).getLevel() < game.getPlayer(i).getBonusValue()
+											&& ((Creature)(playerCreatures.get(i))).getLevel() < tLevel){
+										tLevel = ((Creature)(playerCreatures.get(i))).getLevel();
+										cIndex = i;
+									}
+								}
+								if(cIndex <= 0){
+									final Dialog lftDialog = new Dialog(getActivity());
+									lftDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+									lftDialog.setContentView(R.layout.dialog_select_creature);
+									TextView label = (TextView)lftDialog.findViewById(R.id.select_label);
+									label.setText(game.getPlayer(playerNumber).getPlayerName() + " is Looking For Trouble");
+									LinearLayout cContainer = (LinearLayout)lftDialog.findViewById(R.id.creature_container);
+									ImageButton image = new ImageButton(getActivity());
+									image.setScaleType(ImageView.ScaleType.FIT_XY);
+									image.setImageResource(playerCreatures.get(cIndex).getCardImage());
+									image.setLayoutParams(new LinearLayout.LayoutParams(400, 520));
+									cContainer.addView(image);
+									Button submit = (Button)lftDialog.findViewById(R.id.select_submit);
+									final int tcIndex = cIndex;
+									submit.setOnClickListener(new View.OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											game.getActiveCreatures().add(playerCreatures.get(tcIndex));
+											game.getPlayer(playerNumber).removeInventory(playerCreatures.get(tcIndex));
+											phase = PHASES.IN_COMBAT;
+											loadDisplay(100, playerNumber);
+											lftDialog.dismiss();
+										}
+									});
+								}else{
+									final Dialog ltrDialog = new Dialog(getActivity());
+									ltrDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+									ltrDialog.setContentView(R.layout.dialog_select_creature);
+									TextView label = (TextView)ltrDialog.findViewById(R.id.select_label);
+									label.setText(game.getPlayer(playerNumber).getPlayerName() + " has looted the room.");
+									Button submit = (Button)ltrDialog.findViewById(R.id.select_submit);
+									submit.setOnClickListener(new View.OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											game.drawDoor(playerNumber, 1);
+											phase = PHASES.CHARITY;
+											loadDisplay(1, playerNumber);
+											ltrDialog.dismiss();
+										}
+									});
+								}
+							}else if(phase == PHASES.CHARITY){
+								Thread gearControlProcess = new Thread(new CPProcess(
+										getActivity(), playerNumber, ProcessPhase.FINISH_TURN, 1
+								));
+								gearControlProcess.run();
+								while (gearControlProcess.isAlive()) {
+									try {
+										Thread.sleep(1000);
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									}
+								}
+
+							}
                         }
 
 
@@ -432,7 +508,13 @@ public class Main extends ActionBarActivity
                                 gearView.addView(getCardLayout(playerNumber, card));
                             }
                         }
-
+						LinearLayout backpackView = (LinearLayout)rootView.findViewById(R.id.backpack_scroll_view);
+						ArrayList<Card> backpackCards = game.getPlayer(playerNumber).getBackpack();
+						if(backpackCards != null && !backpackCards.isEmpty()){
+							for(Card card : backpackCards){
+								backpackView.addView(getCardLayout(playerNumber, card));
+							}
+						}
 
                         LinearLayout effectsView = (LinearLayout)rootView.findViewById(R.id.effects_scroll_view);
                         ArrayList<Card> effectsCards = game.getEffects(playerNumber);
@@ -572,6 +654,78 @@ public class Main extends ActionBarActivity
 						TODO: run away button - dice roll
 						*/
                         Button runButton = (Button)rootView.findViewById(R.id.combat_run);
+						runButton.setOnClickListener(new View.OnClickListener() {
+							ImageView dieView;
+							Handler handler;
+							Timer timer;
+							boolean rolling;
+							@Override
+							public void onClick(View v) {
+								handler = new Handler(callback);
+								rolling = false;
+								final Dialog runawayDialog = new Dialog(v.getContext());
+								runawayDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+								runawayDialog.setContentView(R.layout.dialog_run_away);
+								TextView label = (TextView)runawayDialog.findViewById(R.id.die_text);
+								label.setText("Run Away");
+								dieView = (ImageView)runawayDialog.findViewById(R.id.die_image);
+								dieView.setImageResource(R.drawable.die3d);
+								final Button rollDie = (Button)runawayDialog.findViewById(R.id.die_roll);
+								timer = new Timer();
+								rollDie.setOnClickListener(new View.OnClickListener() {
+									@Override
+									public void onClick(View v) {
+										if(!rolling) {
+											rollDie.setText("Finish");
+											timer.schedule(new Roll(), 400);
+										}else{
+											/*
+											TODO: badstuff happens
+											*/
+											timer.cancel();
+											runawayDialog.dismiss();
+											game.getActiveCreatures().clear();
+											loadDisplay(2, playerNumber);
+										}
+									}
+								});
+								runawayDialog.show();
+							}
+							class Roll extends TimerTask{
+								@Override
+								public void run() {
+									handler.sendEmptyMessage(0);
+								}
+							}
+							Handler.Callback callback = new Handler.Callback(){
+								@Override
+								public boolean handleMessage(Message msg) {
+									Random random = new Random();
+									switch(random.nextInt(6) + 1){
+										case 1:
+											dieView.setImageResource(R.drawable.die_one);
+											break;
+										case 2:
+											dieView.setImageResource(R.drawable.die_two);
+											break;
+										case 3:
+											dieView.setImageResource(R.drawable.die_three);
+											break;
+										case 4:
+											dieView.setImageResource(R.drawable.die_four);
+											break;
+										case 5:
+											dieView.setImageResource(R.drawable.die_five);
+											break;
+										case 6:
+											dieView.setImageResource(R.drawable.die_six);
+											break;
+									}
+									rolling = true;
+									return true;
+								}
+							};
+						});
 						/*
 						TODO: ask for help button - number treasures (optional), item (optional), person requested (optional)
 						*/
@@ -696,7 +850,9 @@ public class Main extends ActionBarActivity
             Log.e("Main.java cardLayout", card.getCardName());
             cardContainer.setImageResource(card.getCardImage());
 			cardContainer.setId(card.getCardName().hashCode());
-            cardContainer.setOnClickListener(new View.OnClickListener() {
+			SharedPreferences prefs = getActivity().getSharedPreferences(PREFFS_NAME, MODE_PRIVATE);
+			final boolean tGameStarted = prefs.getBoolean(GAME_STARTED, false);
+			cardContainer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     final Dialog playCardDialog = new Dialog(v.getContext());
@@ -711,8 +867,7 @@ public class Main extends ActionBarActivity
                                     || card.getCardType() == CARD_TYPE.RACE) {
                                 (game.getPlayer(playerNumber)).equipGear(card);
                                 playCardDialog.dismiss();
-								SharedPreferences prefs = v.getContext().getSharedPreferences(PREFFS_NAME, MODE_PRIVATE);
-								if(!prefs.getBoolean(GAME_STARTED, false)) {
+								if(tGameStarted) {
 									loadDisplay(2, playerNumber);
 								}else{
 									if(game.getPlayer(playerNumber).checkForGear(card)){
@@ -759,6 +914,28 @@ public class Main extends ActionBarActivity
                             }
                         }
                     });
+					Button backpack = (Button) playCardDialog.findViewById(R.id.send_to_backpack);
+					if(card.getCardType() == CARD_TYPE.GEAR) {
+						backpack.setVisibility(View.VISIBLE);
+						backpack.setOnClickListener(new View.OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								game.getPlayer(playerNumber).addToBackpack(card);
+								if(tGameStarted) {
+									loadDisplay(2, playerNumber);
+								}else{
+									if(game.getPlayer(playerNumber).checkForBackpack(card)){
+										cardContainer.setVisibility(View.GONE);
+									}else{
+										Toast.makeText(v.getContext(), "Item was unable to be moved to backpack", Toast.LENGTH_SHORT).show();
+									}
+								}
+								playCardDialog.dismiss();
+							}
+						});
+					}else{
+						backpack.setVisibility(View.GONE);
+					}
                     Button discardCard = (Button) playCardDialog.findViewById(R.id.discard_card);
                     discardCard.setOnClickListener(new View.OnClickListener() {
                         @Override

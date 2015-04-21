@@ -30,6 +30,12 @@
         android:text="Play">
     </Button>
     <Button
+        android:id="@+id/send_to_backpack"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Send to Backpack">
+    </Button>
+    <Button
         android:id="@+id/discard_card"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
