@@ -1,7 +1,6 @@
 package munchkin.com.objects;
 
 public interface Card {
-	boolean equipped = false;
 	public String getCardName();
     public void setCardName(String cardName);
     public CARD_TYPE getCardType();

@@ -189,7 +189,7 @@ public class Player{
 			}
 		}
 	}
-	public void backBackToEquipped(Card card){
+	public void backPackToEquipped(Card card){
 		if(verifyGear(card)){
 			backpack.remove(card);
 			gear.add(card);
