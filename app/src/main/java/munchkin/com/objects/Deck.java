@@ -53,9 +53,9 @@ public class Deck {
         model.moveToFirst();
         while(!model.isAfterLast()){
             if(helper.getCardType(model).equals("CLASS")){
-                doorCards.add(new ClassCard(helper.getCardName(model), helper.getCardImage(model)));
+                doorCards.add(new ClassCard(helper.getCardName(model), helper.getCardImage(model), ClassEnum.valueOf(helper.getClassType(model))));
             }else if(helper.getCardType(model).equals("RACE")){
-                doorCards.add(new RaceCard(helper.getCardName(model), helper.getCardImage(model)));
+                doorCards.add(new RaceCard(helper.getCardName(model), helper.getCardImage(model), Race.valueOf(helper.getClassType(model))));
             }
             doorCardCount++;
             model.moveToNext();

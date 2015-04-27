@@ -20,11 +20,7 @@ public class Game {
         activeCreatures = new ArrayList<Card>();
 	}
     public int getNumberPlayers(){
-        int count = 0;
-        for(int i : players.keySet()){
-            count++;
-        }
-        return count;
+		return players.size();
     }
     public boolean addPlayer(Player p, int playerNumber){
         players.put(playerNumber, p);
@@ -116,5 +112,16 @@ public class Game {
 			getPlayer(from).removeInventory(c);
 		}
 		getPlayer(to).addInventory(cards);
+	}
+	public void sellCard(int playerNumber, Card card){
+		if(getPlayer(playerNumber).getAllCards().contains(card)){
+			decks.discardTreasure(card);
+			getPlayer(playerNumber).removeFromAll(card);
+			getPlayer(playerNumber).addGold(((Treasure)(card)).getGold());
+			if(getPlayer(playerNumber).getGold() >= 1000){
+				getPlayer(playerNumber).setLevel(getPlayer(playerNumber).getLevel() + 1);
+				getPlayer(playerNumber).addGold(-1000);
+			}
+		}
 	}
 }

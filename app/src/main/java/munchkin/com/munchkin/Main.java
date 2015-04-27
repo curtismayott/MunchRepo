@@ -211,6 +211,7 @@ public class Main extends ActionBarActivity
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
         private static final String ARG_PLAYER_NUMBER = "player_number";
+		View rootView;
         LinearLayout cardContainer;
         /**
          * Returns a new instance of this fragment for the given section
@@ -231,7 +232,7 @@ public class Main extends ActionBarActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = null;// = inflater.inflate(R.layout.fragment_main, container, false);
+            rootView = null;// = inflater.inflate(R.layout.fragment_main, container, false);
             Bundle b = getArguments();
             int sectionNumber = b.getInt(ARG_SECTION_NUMBER);
             final int playerNumber = b.getInt(ARG_PLAYER_NUMBER);
@@ -532,7 +533,7 @@ public class Main extends ActionBarActivity
                         LinearLayout inventoryView = (LinearLayout)rootView.findViewById(R.id.inventory_scroll_view);
                         LinearLayout creatureView = (LinearLayout)rootView.findViewById(R.id.creature_container);
                         if(!game.getPlayer(playerNumber).isComputer()) {
-                            for(int i = 1; i < game.getNumberPlayers(); i++){
+                            for(int i = 1; i <= game.getNumberPlayers(); i++){
 								if(i != playerNumber) {
                                     FrameLayout layout = getPlayerCard(i);
                                     layout.setLayoutParams(new LinearLayout.LayoutParams(500, 400));
@@ -859,61 +860,73 @@ public class Main extends ActionBarActivity
                     playCardDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
                     playCardDialog.setContentView(R.layout.dialog_play_card_options);
                     Button equipCard = (Button) playCardDialog.findViewById(R.id.equip_card);
-                    equipCard.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (card.getCardType() == CARD_TYPE.GEAR
-                                    || card.getCardType() == CARD_TYPE.CLASS
-                                    || card.getCardType() == CARD_TYPE.RACE) {
-                                (game.getPlayer(playerNumber)).equipGear(card);
-                                playCardDialog.dismiss();
-								if(tGameStarted) {
-									loadDisplay(2, playerNumber);
-								}else{
-									if(game.getPlayer(playerNumber).checkForGear(card)){
-										cardContainer.setVisibility(View.GONE);
-									}else{
-										Toast.makeText(v.getContext(), "Cannot Equip Card", Toast.LENGTH_SHORT).show();
+					if(phase != PHASES.IN_COMBAT && phase != PHASES.KICK_OPEN_THE_DOOR && phase != PHASES.LOOK_FOR_TROUBLE) {
+						equipCard.setOnClickListener(new View.OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								if (card.getCardType() == CARD_TYPE.GEAR
+										|| card.getCardType() == CARD_TYPE.CLASS
+										|| card.getCardType() == CARD_TYPE.RACE) {
+									(game.getPlayer(playerNumber)).equipGear(card);
+									playCardDialog.dismiss();
+									if (tGameStarted) {
+										loadDisplay(2, playerNumber);
+									} else {
+										if (game.getPlayer(playerNumber).checkForGear(card)) {
+											cardContainer.setVisibility(View.GONE);
+										} else {
+											Toast.makeText(v.getContext(), "Cannot Equip Card", Toast.LENGTH_SHORT).show();
+										}
 									}
+								} else {
+									Toast.makeText(getActivity(), "Cannot Equip Card", Toast.LENGTH_SHORT).show();
+									playCardDialog.dismiss();
 								}
-                            } else {
-                                Toast.makeText(getActivity(), "Cannot Equip Card", Toast.LENGTH_SHORT).show();
-                                playCardDialog.dismiss();
-                            }
-                        }
-                    });
+							}
+						});
+					}else{
+						equipCard.setVisibility(View.GONE);
+					}
 
                     Button unequipCard = (Button) playCardDialog.findViewById(R.id.unequip_card);
-                    if((game.getPlayer(playerNumber)).checkForGear(card) || (game.getPlayer(playerNumber)).checkForClassRace(card)){
-                        unequipCard.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if((game.getPlayer(playerNumber)).checkForGear(card) || (game.getPlayer(playerNumber)).checkForClassRace(card)){
-                                    (game.getPlayer(playerNumber)).unequipGear(card);
-                                }
-                                playCardDialog.dismiss();
-                                loadDisplay(2, playerNumber);
-                            }
-                        });
-                    }else unequipCard.setVisibility(View.GONE);
+					if(phase != PHASES.IN_COMBAT && phase != PHASES.KICK_OPEN_THE_DOOR && phase != PHASES.LOOK_FOR_TROUBLE) {
+						if ((game.getPlayer(playerNumber)).checkForGear(card) || (game.getPlayer(playerNumber)).checkForClassRace(card)) {
+							unequipCard.setOnClickListener(new View.OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									if ((game.getPlayer(playerNumber)).checkForGear(card) || (game.getPlayer(playerNumber)).checkForClassRace(card)) {
+										(game.getPlayer(playerNumber)).unequipGear(card);
+									}
+									playCardDialog.dismiss();
+									loadDisplay(2, playerNumber);
+								}
+							});
+						} else unequipCard.setVisibility(View.GONE);
+					}else{
+						unequipCard.setVisibility(View.GONE);
+					}
 
                     Button playCard = (Button) playCardDialog.findViewById(R.id.play_card);
-                    playCard.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (card.getCardType() == CARD_TYPE.CREATURE
-                                    || card.getCardType() == CARD_TYPE.CURSE
-                                    || card.getCardType() == CARD_TYPE.CREATURE_BUFF
-                                    || card.getCardType() == CARD_TYPE.SPECIAL) {
-                                // handle play card
+					if(card.getCardType() != CARD_TYPE.GEAR) {
+						playCard.setOnClickListener(new View.OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								if (card.getCardType() == CARD_TYPE.CREATURE
+										|| card.getCardType() == CARD_TYPE.CURSE
+										|| card.getCardType() == CARD_TYPE.CREATURE_BUFF
+										|| card.getCardType() == CARD_TYPE.SPECIAL) {
+									// handle play card
 
-                                playCardDialog.dismiss();
-                                loadDisplay(2, playerNumber);
-                            } else {
-                                Toast.makeText(getActivity(), "Cannot Play Card", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
+									playCardDialog.dismiss();
+									loadDisplay(2, playerNumber);
+								} else {
+									Toast.makeText(getActivity(), "Cannot Play Card", Toast.LENGTH_SHORT).show();
+								}
+							}
+						});
+					}else{
+						playCard.setVisibility(View.GONE);
+					}
 					Button backpack = (Button) playCardDialog.findViewById(R.id.send_to_backpack);
 					if(card.getCardType() == CARD_TYPE.GEAR) {
 						backpack.setVisibility(View.VISIBLE);
@@ -950,9 +963,7 @@ public class Main extends ActionBarActivity
                     sellCard.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-
-
-                            loadDisplay(2, playerNumber);
+							loadDisplay(2, playerNumber);
                         }
                     });
                     Button dismissDialog = (Button) playCardDialog.findViewById(R.id.dismiss_dialog);
@@ -985,9 +996,10 @@ public class Main extends ActionBarActivity
             */
             LayoutInflater inflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View view = inflater.inflate(R.layout.player_view, null);
-            FrameLayout container = (FrameLayout)view.findViewById(R.id.player_container);
-            final int pNum = playerNum;
+            final FrameLayout container = (FrameLayout)view.findViewById(R.id.player_container);
+
             /*
+            final int pNum = playerNum;
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -1022,8 +1034,15 @@ public class Main extends ActionBarActivity
                 @Override
                 public void onClick(View v) {
                     if (game.getPlayer(playerNum).getAllGear() != null && game.getPlayer(playerNum).getAllGear().size() != 0) {
-                        cardContainer.removeAllViews();
-                        cardContainer.setVisibility(View.VISIBLE);
+                        Dialog playerCards = new Dialog(v.getContext());
+						playerCards.requestWindowFeature(Window.FEATURE_NO_TITLE);
+						playerCards.setContentView(R.layout.dialog_select_creature);
+						TextView label = (TextView)playerCards.findViewById(R.id.select_label);
+						label.setText(game.getPlayer(playerNum).getPlayerName() + "'s Gear");
+						Button submit = (Button)playerCards.findViewById(R.id.select_submit);
+						submit.setVisibility(View.GONE);
+
+						LinearLayout opCardContainer = (LinearLayout)playerCards.findViewById(R.id.creature_container);
                         for (final Card card : game.getPlayer(playerNum).getAllGear()) {
                             ImageButton button = new ImageButton(getActivity());
                             button.setLayoutParams(new LinearLayout.LayoutParams(180, 240));
@@ -1040,14 +1059,16 @@ public class Main extends ActionBarActivity
                                         @Override
                                         public void onClick(View v) {
                                             cardView.dismiss();
+
                                         }
                                     });
                                     cardView.show();
                                 }
                             });
-                            cardContainer.addView(button);
+							opCardContainer.addView(button);
                             Log.e("Main PlayerCard", card.getCardName());
                         }
+						playerCards.show();
                     }
                     else{
                         Toast.makeText(getActivity(), "No Gear Equipped", Toast.LENGTH_SHORT).show();

@@ -1,6 +1,5 @@
 package munchkin.com.objects;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Player{
@@ -9,6 +8,7 @@ public class Player{
     boolean isComputer;
     int level;
     int handCapacity;
+	int gold;
     ArrayList<Card> gear;
     ArrayList<Card> inventory;
 	ArrayList<Card> backpack;
@@ -24,6 +24,22 @@ public class Player{
         inventory = new ArrayList<Card>();
 		backpack = new ArrayList<Card>();
     }
+	public ArrayList<Card> getAllCards(){
+		ArrayList<Card> combined = new ArrayList<Card>();
+		combined.addAll(gear);
+		combined.addAll(inventory);
+		combined.addAll(backpack);
+		return combined;
+	}
+	public void removeFromAll(Card card){
+		if(gear.contains(card)){
+			gear.remove(card);
+		}else if(inventory.contains(card)){
+			inventory.remove(card);
+		}else if(backpack.contains(card)){
+			backpack.remove(card);
+		}
+	}
     public String getPlayerName(){ return name; }
     public int getLevel(){ return level; }
     public void setLevel(int level){ this.level = level; }
@@ -108,6 +124,38 @@ public class Player{
         }
         return false;
     }
+	public boolean hasClass(){
+		for(Card card : gear){
+			if(card.getCardType() == CARD_TYPE.CLASS){
+				return true;
+			}
+		}
+		return false;
+	}
+	public Card getClassCard(){
+		for(Card card : gear){
+			if(card.getCardType() == CARD_TYPE.CLASS){
+				return card;
+			}
+		}
+		return null;
+	}
+	public boolean hasRace(){
+		for(Card card : gear){
+			if(card.getCardType() == CARD_TYPE.RACE){
+				return true;
+			}
+		}
+		return false;
+	}
+	public Card getRaceCard(){
+		for(Card card : gear){
+			if(card.getCardType() == CARD_TYPE.RACE){
+				return card;
+			}
+		}
+		return null;
+	}
     public void unequipGear(Card card){
         if(checkForGear(card) || checkForClassRace(card)) {
             gear.remove(card);
@@ -198,4 +246,8 @@ public class Player{
 	public boolean checkForBackpack(Card card){
 		return backpack.contains(card);
 	}
+	public int getGold() { return gold; }
+	public void setGold(int gold) { this.gold = gold; }
+	public void addGold(int gold) { this.gold += gold; }
+
 }

@@ -22,12 +22,12 @@ public class CRAWHelper extends SQLiteOpenHelper {
         db = _db;
         db.execSQL("CREATE TABLE IF NOT EXISTS Cards (id INTEGER PRIMARY KEY, " +
                 "CardName TEXT, CardType TEXT, CardImage INTEGER, Bonus INTEGER, " +
-                "GearPosition TEXT, NumHands INTEGER, ClassType TEXT);");
+                "GearPosition TEXT, NumHands INTEGER, ClassType TEXT, Gold INTEGER);");
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
-    public void insert(String cardName, String cardType, int cardImage, int bonus, String gearPosition, int numHands, String classType){
+    public void insert(String cardName, String cardType, int cardImage, int bonus, String gearPosition, int numHands, String classType, int gold){
         ContentValues cv = new ContentValues();
         cv.put("CardName", cardName);
         cv.put("CardType", cardType);
@@ -36,6 +36,7 @@ public class CRAWHelper extends SQLiteOpenHelper {
         cv.put("GearPosition", gearPosition);
         cv.put("NumHands", numHands);
         cv.put("ClassType", classType);
+		cv.put("Gold", gold);
         getWritableDatabase().insert("Cards", null, cv);
     }
     public Cursor getCards(){
@@ -85,6 +86,7 @@ public class CRAWHelper extends SQLiteOpenHelper {
     public String getClassType(Cursor c){
         return c.getString(c.getColumnIndex("ClassType"));
     }
+	public int getGold(Cursor c) { return c.getInt(c.getColumnIndex("Gold")); }
     public void deleteDatabase(){
         getWritableDatabase().execSQL("DROP TABLE IF EXISTS Cards;");
     }

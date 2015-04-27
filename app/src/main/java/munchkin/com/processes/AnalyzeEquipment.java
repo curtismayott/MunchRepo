@@ -1,12 +1,18 @@
 package munchkin.com.processes;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 import munchkin.com.munchkin.Main;
 import munchkin.com.objects.CARD_TYPE;
 import munchkin.com.objects.Card;
+import munchkin.com.objects.ClassCard;
+import munchkin.com.objects.ClassEnum;
 import munchkin.com.objects.Gear;
 import munchkin.com.objects.GearPositions;
+import munchkin.com.objects.Race;
+import munchkin.com.objects.RaceCard;
 
 /**
  * Created by darkbobo on 3/6/15.
@@ -28,8 +34,10 @@ public class AnalyzeEquipment {
                 compareGear((Gear) cards.get(i));
             }else if(cards.get(i).getCardType() == CARD_TYPE.RACE){
                 // search gear for gear that would be good for race
+				compareRace((RaceCard)cards.get(i));
             }else if(cards.get(i).getCardType() == CARD_TYPE.CLASS){
                 // search gear for gear that would be good for class
+				compareClass((ClassCard)cards.get(i));
             }
         }
     }
@@ -71,4 +79,75 @@ public class AnalyzeEquipment {
             }
         }
     }
+	private void compareRace(RaceCard card){
+		RaceCard raceCard = (RaceCard)(Main.game.getPlayer(playerNumber).getRaceCard());
+		if(raceCard == null){
+			Main.game.getPlayer(playerNumber).forceEquipGear(card);
+		}else{
+			if(raceCard.getRace() != card.getRace()){
+				if(raceCard.getRace() == Race.ELF){
+					// do nothing
+					return;
+				}else if(raceCard.getRace() == Race.DWARF){
+					if(card.getRace() == Race.ELF){
+						Main.game.getPlayer(playerNumber).forceEquipGear(card);
+					}else if(card.getRace() == Race.HAFLING){
+						Main.game.getPlayer(playerNumber).forceEquipGear(card);
+					}
+				}else if(raceCard.getRace() == Race.HAFLING){
+					if(card.getRace() == Race.DWARF){
+						// do nothing
+						return;
+					}else if(card.getRace() == Race.ELF){
+						Main.game.getPlayer(playerNumber).forceEquipGear(card);
+					}
+				}
+			}else{
+				// do nothing
+				return;
+			}
+		}
+	}
+	private void compareClass(ClassCard card){
+		// TODO: evaluate gear for each class (added up)
+		ClassCard classCard = (ClassCard)(Main.game.getPlayer(playerNumber).getClassCard());
+		if(classCard == null){
+			Main.game.getPlayer(playerNumber).forceEquipGear(card);
+		}else{
+			// player has a class card equipped
+			if(card.getClassEnum() != classCard.getClassEnum()){
+				// class is not the class the player has equipped
+				if(card.getClassEnum() == ClassEnum.WIZARD){
+					Main.game.getPlayer(playerNumber).forceEquipGear(card);
+				}else if(card.getClassEnum() == ClassEnum.CLERIC){
+					if(classCard.getClassEnum() == ClassEnum.THIEF){
+						// player's class is a thief
+						return;
+					}else if(classCard.getClassEnum() == ClassEnum.WARRIOR){
+						// player's class is a warrior
+						Main.game.getPlayer(playerNumber).forceEquipGear(card);
+					}
+				}else if(card.getClassEnum() == ClassEnum.THIEF){
+					if(classCard.getClassEnum() == ClassEnum.CLERIC){
+						// player's class is a cleric
+						Main.game.getPlayer(playerNumber).forceEquipGear(card);
+					}else if(classCard.getClassEnum() == ClassEnum.WARRIOR){
+						// player's class is a warrior
+						Main.game.getPlayer(playerNumber).forceEquipGear(card);
+					}
+				}else if(card.getClassEnum() == ClassEnum.WARRIOR){
+					if(classCard.getClassEnum() == ClassEnum.CLERIC){
+						// player's class is a cleric
+						return;
+					}else if(classCard.getClassEnum() == ClassEnum.THIEF){
+						// player's class is a thief
+						return;
+					}
+				}
+			}else{
+				// do nothing
+				return;
+			}
+		}
+	}
 }

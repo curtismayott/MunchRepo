@@ -7,9 +7,11 @@ public class ClassCard extends Door{
     int cardImage;
     String effect1;
     String effect2;
+	ClassEnum classEnum;
     public ClassCard(){}
-    public ClassCard(String cardName, int cardImage){
+    public ClassCard(String cardName, int cardImage, ClassEnum classEnum){
         super(cardName, CARD_TYPE.CLASS, cardImage);
+		setClassEnum(classEnum);
     }
 
     // add class: Effect
@@ -21,4 +23,6 @@ public class ClassCard extends Door{
     public int getCardImage() { return cardImage; }
     @Override
     public void setCardImage(int cardImage) { this.cardImage = cardImage; }
+	public ClassEnum getClassEnum() { return classEnum; }
+	public void setClassEnum(ClassEnum classEnum) { this.classEnum = classEnum; }
 }

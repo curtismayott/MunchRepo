@@ -6,13 +6,15 @@ public class Treasure implements Card {
     int cardImage;
     int bonus;
     String classType;
+	int gold;
     public Treasure(){}
-    public Treasure(String cardName, CARD_TYPE cardType, int cardImage, int bonus, String classType){
+    public Treasure(String cardName, CARD_TYPE cardType, int cardImage, int bonus, String classType, int gold){
         setCardName(cardName);
         setCardType(cardType);
         setCardImage(cardImage);
         setBonusAmount(bonus);
         setClassType(classType);
+		setGold(gold);
     }
 	@Override
 	public String getCardName() {
@@ -34,4 +36,6 @@ public class Treasure implements Card {
     public void setBonusAmount(int bonus){ this.bonus = bonus; }
     public String getClassType(){ return classType; }
     public void setClassType(String classType){ this.classType = classType; }
+	public int getGold() { return gold; }
+	public void setGold(int gold) { this.gold = gold; }
 }
